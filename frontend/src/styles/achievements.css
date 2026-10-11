@@ -1,0 +1,44 @@
+.achievements-main,.privacy-main { width: min(100%, 1220px); margin: 0 auto; padding: 36px clamp(20px, 5vw, 68px) 60px; }
+.achievements-main>.daily-heading,.privacy-main>.daily-heading { padding: 14px 0 24px; }
+.achievements-main>.daily-heading h1,.privacy-main>.daily-heading h1 { margin: .45rem 0 .55rem; font-size: clamp(2.8rem, 5vw, 4rem); }
+.achievements-main>.daily-heading>p,.privacy-main>.daily-heading>p { max-width: 710px; color: var(--muted-text); font-size: .9rem; line-height: 1.7; }
+.achievement-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; }
+.achievement-summary article { display: grid; align-content: start; gap: .4rem; padding: 1.15rem; }
+.achievement-icon { display: grid; width: 39px; height: 39px; place-items: center; margin-bottom: .15rem; border-radius: 13px; color: var(--amaranth); background: #f5e9eb; }
+.achievement-icon.sage { color: #657e6e; background: #edf2e9; }
+.achievement-summary strong { color: #533c45; font: 500 2rem/1.1 'Playfair Display',Georgia,serif; }
+.achievement-summary small { color: var(--muted-text); font-size: .68rem; line-height: 1.5; }
+.achievement-section { margin-top: 1.4rem; }
+.achievement-section>header { margin-bottom: .8rem; }
+.achievement-section>header h2 { margin: .35rem 0; font-size: 1.6rem; }
+.achievement-section>header p { margin: 0; color: var(--muted-text); font-size: .75rem; line-height: 1.55; }
+.achievement-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; }
+.achievement-card { display: flex; align-items: flex-start; gap: .75rem; padding: 1rem; }
+.achievement-card .achievement-icon { flex: 0 0 39px; }
+.achievement-card.earned .achievement-icon { color: #933b5b; background: #f6e9ec; }
+.achievement-card.locked { opacity: .78; }
+.achievement-card>div { min-width: 0; }
+.achievement-card h3,.certificate-card h3 { display: flex; align-items: center; gap: .35rem; margin: .15rem 0 .35rem; color: #53444a; font: 500 1.05rem 'Playfair Display',Georgia,serif; }
+.achievement-card h3 .signature-heart { font-size: .85rem; }
+.achievement-card p,.certificate-card p { margin: 0 0 .35rem; color: var(--muted-text); font-size: .7rem; line-height: 1.55; }
+.achievement-card small,.certificate-card small { color: #8b8181; font-size: .65rem; }
+.certificate-grid { display: grid; gap: .65rem; }
+.certificate-card { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; align-items: center; gap: .7rem; padding: 1rem; }
+.certificate-heart { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 10px; background: #f5e9eb; }
+.certificate-card .button { padding: .62rem .82rem; font-size: .72rem; white-space: nowrap; }
+.certificate-card .button:disabled { opacity: .54; cursor: not-allowed; }
+.certificate-card .certificate-range { margin-top: .45rem; color: #68796c; font-size: .68rem; }
+.achievement-footnote,.achievement-disclaimer { margin: .85rem 0 0; color: #8b8181; font-size: .68rem; line-height: 1.6; }
+.achievement-disclaimer { text-align: center; }
+.privacy-card { display: grid; grid-template-columns: 45px minmax(0,1fr); gap: .9rem; padding: 1.25rem; }
+.privacy-card h2 { margin: .35rem 0 .45rem; font-size: 1.5rem; }
+.privacy-card p { max-width: 780px; color: var(--muted-text); font-size: .78rem; line-height: 1.65; }
+.privacy-card .button { padding: .7rem 1rem; font-size: .78rem; }
+.privacy-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 14px; color: var(--amaranth); background: #f5e9eb; }
+.privacy-icon.muted { color: #68796c; background: #edf2e9; }
+.deletion-card { margin-top: .8rem; border-color: #ead9d5; }
+.deletion-card small { display: inline-flex; align-items: center; gap: .35rem; color: #657669; font-size: .68rem; }
+.privacy-footnote { margin-top: 1rem; color: #8b8181; font-size: .68rem; line-height: 1.6; text-align: center; }
+
+@media(max-width:760px) { .achievements-main,.privacy-main { padding: 23px 18px 44px; } .achievements-main>.daily-heading,.privacy-main>.daily-heading { padding-top: 15px; } .achievements-main>.daily-heading h1,.privacy-main>.daily-heading h1 { font-size: 2.75rem; } }
+@media(max-width:560px) { .achievement-summary,.achievement-grid { grid-template-columns: 1fr; } .certificate-card { grid-template-columns: 30px minmax(0,1fr); } .certificate-card .button { grid-column: 2; justify-self: start; } .privacy-card { grid-template-columns: 36px minmax(0,1fr); padding: 1rem; } .privacy-icon { width: 34px; height: 34px; } }

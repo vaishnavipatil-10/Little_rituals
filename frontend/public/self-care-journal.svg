@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 470" role="img" aria-labelledby="title desc">
+  <title id="title">A little self-care journal</title>
+  <desc id="desc">An open journal with a gentle routine checklist, a small cream jar, and a botanical sprig.</desc>
+  <defs>
+    <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#fffdf8"/><stop offset="1" stop-color="#f6eee4"/></linearGradient>
+    <linearGradient id="cover" x2="1" y2="1"><stop stop-color="#ad7180"/><stop offset="1" stop-color="#8f5265"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#584246" flood-opacity=".13"/></filter>
+  </defs>
+  <ellipse cx="268" cy="415" rx="181" ry="24" fill="#75665b" opacity=".10"/>
+  <path d="M67 295c4-85 31-159 95-190 40-19 83-12 107 11 32-32 81-36 123-11 58 35 77 106 62 190-11 62-52 88-112 72-36-10-59-20-81-18-29 2-54 22-91 27-61 8-101-18-103-81Z" fill="#e8ebe0"/>
+  <path d="M344 75c36-35 84-34 112-5" fill="none" stroke="#aabaaE" stroke-width="2" stroke-linecap="round"/>
+  <path d="M99 109c9-10 21-10 29 0-8 10-20 10-29 0Z" fill="#b5728a" opacity=".65"/>
+  <path d="M111 110c-6-8-4-15 4-18 5 8 4 14-4 18Z" fill="#829487"/>
+  <g transform="translate(424 120)" fill="none" stroke="#933b5b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M0 7c-10-10-20 4 0 17 20-13 10-27 0-17Z"/></g>
+  <g filter="url(#shadow)" transform="rotate(-4 259 263)">
+    <path d="M78 192c51-20 114-13 179 14v176c-63-26-126-33-179-14V192Z" fill="url(#cover)"/>
+    <path d="M257 206c62-29 123-31 180-12v176c-57-19-118-17-180 12V206Z" fill="#90566a"/>
+    <path d="M87 184c53-21 111-13 170 11v172c-59-24-117-32-170-11V184Z" fill="url(#paper)" stroke="#e4d8cc"/>
+    <path d="M265 195c57-25 112-29 163-11v172c-51-18-106-14-163 11V195Z" fill="url(#paper)" stroke="#e4d8cc"/>
+    <path d="M257 195v173" stroke="#d9c8bd" stroke-width="2"/>
+    <text x="111" y="222" fill="#933b5b" font-family="Georgia,serif" font-size="19" font-style="italic">little rituals</text>
+    <path d="M111 232h101" stroke="#d9c9bd"/>
+    <text x="110" y="258" fill="#756a6d" font-family="Arial,sans-serif" font-size="8" letter-spacing="1.5">TODAY, GENTLY</text>
+    <g font-family="Arial,sans-serif" font-size="10" fill="#756a6d">
+      <rect x="112" y="275" width="10" height="10" rx="3" fill="#dce5d9"/><path d="m114 280 2 2 4-5" fill="none" stroke="#708575" stroke-width="1.4"/><text x="130" y="284">cleanse + breathe</text>
+      <rect x="112" y="300" width="10" height="10" rx="3" fill="#f1dfe2"/><path d="m114 305 2 2 4-5" fill="none" stroke="#933b5b" stroke-width="1.4"/><text x="130" y="309">a little hydration</text>
+      <rect x="112" y="325" width="10" height="10" rx="3" fill="none" stroke="#cbbab1"/><text x="130" y="334">write one kind thing</text>
+    </g>
+    <text x="288" y="228" fill="#933b5b" font-family="Georgia,serif" font-size="15" font-style="italic">a note to me</text>
+    <path d="M288 243h104M288 258h96M288 273h101M288 288h88" stroke="#ddd0c5" stroke-linecap="round"/>
+    <path d="M302 322c-7-7-14 3 0 12 14-9 7-19 0-12Z" fill="#b5728a" opacity=".72"/>
+    <path d="M322 335c23-8 42-8 61-2" stroke="#ddd0c5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(379 329)" filter="url(#shadow)">
+    <rect x="0" y="11" width="69" height="58" rx="13" fill="#eee1cd" stroke="#d4c3a9"/>
+    <rect x="-3" y="4" width="75" height="12" rx="5" fill="#b9a486"/>
+    <path d="M14 37h40" stroke="#9f9679" stroke-width="1.2"/>
+    <text x="34" y="33" text-anchor="middle" fill="#765c55" font-family="Georgia,serif" font-size="8">soft cream</text>
+    <path d="M34 44c-4-4-8 2 0 7 8-5 4-11 0-7Z" fill="#b5728a"/>
+  </g>
+  <g fill="none" stroke="#829487" stroke-width="2" stroke-linecap="round">
+    <path d="M414 321c13-43 16-79 10-113m1 42c-20-8-31-19-36-35m39 19c16-14 22-28 22-45"/>
+    <path d="M386 215c-10-19-22-18-24-4 8 9 17 10 24 4Zm40 6c7-19 20-21 24-8-6 11-15 14-24 8Zm-10-31c-3-18 7-26 17-17 1 12-5 19-17 17Z" fill="#b9c8b6" stroke="#829487"/>
+  </g>
+  <path d="M153 106c-6-6-12 3 0 11 12-8 6-17 0-11Z" fill="none" stroke="#933b5b" stroke-width="1.5"/>
+  <path d="m369 90 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#c49a65" opacity=".75"/>
+</svg>

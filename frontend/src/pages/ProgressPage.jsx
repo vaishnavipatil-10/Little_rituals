@@ -1,0 +1,83 @@
+import { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, CalendarDays, Heart, Package, ShieldCheck, Sparkles } from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart } from 'recharts';
+import { Link } from 'react-router-dom';
+import { AppSidebar } from '../components/AppSidebar.jsx';
+import { SignatureHeart } from '../components/SignatureHeart.jsx';
+import { api } from '../services/api.js';
+import '../styles/daily.css';
+import '../styles/progress.css';
+import { localDateParameters } from '../utils/localDate.js';
+import { dateLabel, makeProgressReport, recentActivity } from '../utils/progressReport.js';
+
+const sources = [
+  ['How to test skin care products', 'https://www.aad.org/public/everyday-care/skin-care-secrets/prevent-skin-problems/test-skin-care-products'],
+  ['Retinoid or retinol?', 'https://www.aad.org/public/everyday-care/skin-care-secrets/anti-aging/retinoid-retinol'],
+  ['How to safely exfoliate at home', 'https://www.aad.org/public/everyday-care/skin-care-secrets/routine/safely-exfoliate-at-home'],
+  ['Salicylic acid', 'https://dermnetnz.org/topics/salicylic-acid'],
+  ['Azelaic acid', 'https://dermnetnz.org/topics/azelaic-acid'],
+];
+
+function expiryDate(product) {
+  if (product.expiry_date) return { date: product.expiry_date, estimated: false };
+  return null;
+}
+
+export function ProgressPage() {
+  const [summary, setSummary] = useState(null); const [products, setProducts] = useState([]); const [selectedIds, setSelectedIds] = useState([]);
+  const [compatibility, setCompatibility] = useState(null); const [checkingCompatibility, setCheckingCompatibility] = useState(false); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [compatibilityError, setCompatibilityError] = useState('');
+  async function load() {
+    setLoading(true); setError('');
+    try {
+      const [progress, productList] = await Promise.all([api.get('/progress', { params: localDateParameters() }), api.get('/products')]);
+      setSummary(progress.data); setProducts(productList.data.products || []);
+    } catch (requestError) { setError(requestError.response?.data?.error?.message || 'Your progress could not be loaded. Please try again.'); }
+    finally { setLoading(false); }
+  }
+  useEffect(() => { load(); }, []);
+  async function reviewCompatibility() {
+    if (selectedIds.length < 2) { setCompatibilityError('Select at least two products to review a combination.'); return; }
+    setCheckingCompatibility(true); setCompatibilityError(''); setCompatibility(null);
+    try { const { data } = await api.get('/progress/compatibility', { params: { productIds: selectedIds.join(',') } }); setCompatibility(data); }
+    catch (requestError) { setCompatibilityError(requestError.response?.data?.error?.message || 'Product notes could not be reviewed.'); }
+    finally { setCheckingCompatibility(false); }
+  }
+  const report = useMemo(() => summary ? makeProgressReport(summary) : null, [summary]);
+  const expiryProducts = useMemo(() => (summary?.products || []).filter((product) => !['finished', 'irritated'].includes(product.status)).map((product) => ({ ...product, expiry: expiryDate(product) })).filter((product) => product.expiry || product.status === 'expired').sort((a, b) => (a.expiry?.date || '9999-12-31').localeCompare(b.expiry?.date || '9999-12-31')), [summary]);
+  const today = summary?.today || new Date().toISOString().slice(0, 10);
+  const upcoming = expiryProducts.filter((product) => product.status === 'using' && product.expiry && product.expiry.date >= today && (new Date(`${product.expiry.date}T00:00:00Z`) - new Date(`${today}T00:00:00Z`)) / 86400000 <= 30);
+  const overdue = expiryProducts.filter((product) => product.status === 'expired' || (product.expiry && product.expiry.date < today));
+
+  return <div className="app-shell"><AppSidebar active="progress"/><main className="progress-main">
+    <header className="daily-heading"><span className="daily-kicker"><SignatureHeart/> Your own small steps</span><h1>My Progress</h1><p>A gentle overview of what you’ve logged. Only your saved records appear here; quiet days are part of the story too.</p></header>
+    {error && <div className="daily-alert" role="alert">{error}<button type="button" className="daily-text-button" onClick={load}>Try again</button></div>}
+    {loading ? <div className="daily-state" role="status"><span className="loading-heart">♡</span><p>Gathering your progress…</p></div> : summary && report && <>
+      <section className="progress-stat-grid" aria-label="Last seven days summary">
+        <article className="daily-panel progress-stat"><span className="progress-stat-icon"><Package size={19}/></span><span className="daily-kicker">Your product shelf</span><strong>{summary.products.length}</strong><p>{summary.products.filter((product) => product.status === 'using').length} currently in use</p></article>
+        <article className="daily-panel progress-stat"><span className="progress-stat-icon"><Heart size={19}/></span><span className="daily-kicker">Skin check-ins · 30 days</span><strong>{report.checkins}</strong><p>{report.avg ? `Average rating ${report.avg} of 5` : 'No skin ratings logged yet'}</p></article>
+        <article className="daily-panel progress-stat"><span className="progress-stat-icon sage"><Sparkles size={19}/></span><span className="daily-kicker">Routine steps · 7 days</span><strong>{report.routinePct == null ? '—' : `${report.routinePct}%`}</strong><p>{report.routinePct == null ? 'No completed routine steps yet' : 'Of saved routine steps completed'}</p></article>
+        <article className="daily-panel progress-stat"><span className="progress-stat-icon olive"><CalendarDays size={19}/></span><span className="daily-kicker">Water log · 7 days</span><strong>{report.waterDays}<small> / 7</small></strong><p>Days with at least one entry</p></article>
+      </section>
+
+      <section className="progress-chart-grid">
+        <article className="daily-panel progress-chart"><span className="daily-kicker">A week at a glance</span><h2>Water logged</h2><p>Amounts from your entries, compared with your personal {summary.waterGoalMl.toLocaleString()} ml goal.</p><div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={report.days} margin={{ top: 10, right: 12, bottom: 0, left: -18 }}><defs><linearGradient id="waterFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#829b87" stopOpacity={0.34}/><stop offset="100%" stopColor="#829b87" stopOpacity={0.03}/></linearGradient></defs><CartesianGrid stroke="#eee7df" vertical={false}/><XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: '#857b7b', fontSize: 11 }}/><YAxis tickLine={false} axisLine={false} tick={{ fill: '#857b7b', fontSize: 10 }}/><Tooltip formatter={(value) => [value == null ? 'No entries' : `${Number(value).toLocaleString()} ml`, 'Logged']}/><Area type="monotone" dataKey="water" stroke="#718c78" strokeWidth={2} fill="url(#waterFill)" connectNulls={false}/></AreaChart></ResponsiveContainer></div></article>
+        <article className="daily-panel progress-chart"><span className="daily-kicker">Personal reflections</span><h2>Skin ratings</h2><p>Ratings you chose in your journal. They are not a diagnosis or measure of health.</p><div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><BarChart data={report.days} margin={{ top: 10, right: 8, bottom: 0, left: -25 }}><CartesianGrid stroke="#eee7df" vertical={false}/><XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: '#857b7b', fontSize: 11 }}/><YAxis domain={[0,5]} ticks={[0,1,2,3,4,5]} tickLine={false} axisLine={false} tick={{ fill: '#857b7b', fontSize: 10 }}/><Tooltip formatter={(value) => [value == null ? 'No rating' : `${value} / 5`, 'Your rating']}/><Bar dataKey="skin" fill="#b5728a" radius={[5,5,0,0]} maxBarSize={26}/></BarChart></ResponsiveContainer></div></article>
+        <article className="daily-panel progress-chart"><span className="daily-kicker">Routine check-ins</span><h2>Steps completed</h2><p>Daily percent is completed steps divided by the total steps in saved routine completion records.</p><div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><BarChart data={report.days} margin={{ top: 10, right: 8, bottom: 0, left: -25 }}><CartesianGrid stroke="#eee7df" vertical={false}/><XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: '#857b7b', fontSize: 11 }}/><YAxis domain={[0,100]} ticks={[0,25,50,75,100]} tickFormatter={(value) => `${value}%`} tickLine={false} axisLine={false} tick={{ fill: '#857b7b', fontSize: 10 }}/><Tooltip formatter={(value) => [value == null ? 'No completion record' : `${value}%`, 'Completed']}/><Bar dataKey="routinePct" fill="#829b87" radius={[5,5,0,0]} maxBarSize={26}/></BarChart></ResponsiveContainer></div></article>
+      </section>
+      <section className="daily-panel weekly-recap"><span className="daily-kicker"><SignatureHeart/> Your week in little moments</span><h2>Weekly summary</h2><p>{report.completedRoutines} routine log{report.completedRoutines === 1 ? '' : 's'} with completed steps · {report.weeklyJournal} journal check-in{report.weeklyJournal === 1 ? '' : 's'} · {report.totalWater.toLocaleString()} ml water logged across {report.waterDays} day{report.waterDays === 1 ? '' : 's'}.</p><small>Counts cover the last 7 local calendar dates, including today. Only saved entries are counted; days without records appear as gaps in the charts.</small></section>
+      <section className="daily-panel goals-panel"><span className="daily-kicker"><SignatureHeart/> Your saved intentions</span><h2>Personal goals</h2>{summary.goals.length ? <><div className="goal-chips">{summary.goals.map((goal) => <span key={goal}>{goal}</span>)}</div><p>These are intentions saved in your skin profile. The current schema doesn’t store completion status, so they aren’t marked done or tracked over time.</p></> : <p>No personal goals saved yet. You can add intentions in your <Link to="/profile">skin profile</Link>.</p>}</section>
+      <section className="daily-panel activity-panel"><span className="daily-kicker">A few recent moments</span><h2>Recent activity</h2>{recentActivity(summary).length ? <ul>{recentActivity(summary).map((event, index) => <li key={`${event.date}-${event.type}-${index}`}><span className={`activity-mark ${event.type}`}><SignatureHeart/></span><span>{event.text}</span><time dateTime={event.date}>{dateLabel(event.date)}</time></li>)}</ul> : <div className="daily-empty"><span className="empty-heart">♡</span><h3>Your timeline will begin here</h3><p>Log a journal check-in, routine step, or water entry to see a quiet record of it here.</p></div>}</section>
+      <section className="daily-panel expiry-panel"><header><span className="progress-stat-icon"><Package size={19}/></span><div><span className="daily-kicker">Product shelf care</span><h2>Expiry watch</h2></div></header><p>Shows saved expiry dates and products already marked expired. “Expiring soon” means within 30 days. No date is inferred from opened date or PAO.</p>
+        {expiryProducts.length === 0 ? <div className="daily-empty"><span className="empty-heart">♡</span><h3>No expiry dates to watch yet</h3><p>Enter a product expiry date in your product details to see it here. Opened date and PAO are not treated as a definite expiry date.</p></div> : <><div className="expiry-summary"><span><strong>{overdue.length}</strong> expired or past date</span><span><strong>{upcoming.length}</strong> within 30 days</span><span><strong>{expiryProducts.filter((product) => product.expiry).length}</strong> with a date</span></div><div className="expiry-list">{expiryProducts.map((product) => { const isOverdue = product.status === 'expired' || (product.expiry && product.expiry.date < today); return <article key={product.id} className={isOverdue ? 'expiry-row overdue' : upcoming.includes(product) ? 'expiry-row soon' : 'expiry-row'}><span className="expiry-row-icon">{isOverdue ? <AlertTriangle size={17}/> : <Package size={17}/>}</span><span className="expiry-name"><strong>{product.name}</strong><small>{product.brand || product.category}</small></span><span className="expiry-date">{product.expiry ? dateLabel(product.expiry.date,{ month:'short',day:'numeric',year:'numeric' }) : 'Marked expired · date unknown'}</span></article>; })}</div></>}
+      </section>
+      <section className="daily-panel checker-panel"><span className="daily-kicker"><ShieldCheck size={14}/> Catalog notes, not a safety verdict</span><h2>Ingredient compatibility notes</h2><p>Review only the catalog ingredients linked to a product. Any interaction language below comes from those catalog records; a blank note does not establish compatibility.</p>
+        {products.length < 2 ? <div className="daily-empty"><span className="empty-heart">♡</span><h3>Add another product to compare</h3><p>A combination review needs at least two products with linked catalog ingredients.</p></div> : <><fieldset className="checker-products"><legend>Select products to review together ({selectedIds.length}/12 selected)</legend>{products.map((product) => <label key={product.id}><input type="checkbox" checked={selectedIds.includes(product.id)} disabled={!selectedIds.includes(product.id) && selectedIds.length >= 12} onChange={(event) => { setSelectedIds((previous) => event.target.checked ? [...previous, product.id] : previous.filter((id) => id !== product.id)); setCompatibility(null); setCompatibilityError(''); }}/><span><strong>{product.name}</strong><small>{product.brand || product.category}</small></span></label>)}</fieldset><button type="button" className="button button-primary checker-review" disabled={checkingCompatibility || selectedIds.length < 2} onClick={reviewCompatibility}>{checkingCompatibility ? 'Reviewing…' : 'Review selected products'}</button></>}
+        {compatibilityError && <p className="daily-alert" role="alert">{compatibilityError}</p>}
+        {compatibility && <div className="compatibility-results">{compatibility.linkedIngredientCount === 0 ? <div className="daily-empty"><span className="empty-heart">♡</span><h3>No catalog ingredients linked</h3><p>The selected products have no linked catalog ingredients. Text ingredient notes aren’t analyzed, so the combination remains unknown.</p></div> : <>{compatibility.avoidMatches.length > 0 && <div className="compatibility-avoid"><strong>Matches your saved avoid list:</strong> {compatibility.avoidMatches.map((item) => `${item.name} (${item.productName})`).join(', ')}. This is a profile match, not a medical assessment.</div>}{compatibility.warnings.length > 0 ? compatibility.warnings.map((warning) => <div className="compatibility-warning" key={warning.code}><strong>{warning.code === 'POTENTIAL_IRRITATION' ? 'Potential irritation note' : 'Catalog note'}</strong><p>{warning.message}</p><small>Linked ingredients: {warning.ingredients.join(', ')}</small></div>) : <div className="compatibility-clear"><SignatureHeart/> No catalog-supported pairing note matched this selection. This is not confirmation that the combination is safe or suitable.</div>}<div className="compatibility-list">{compatibility.products.map((product) => <article key={product.id}><h3>{product.name}</h3>{product.ingredients.length === 0 ? <p>No linked catalog ingredients; this product’s combination status is unknown.</p> : product.ingredients.map((ingredient) => <div key={ingredient.id}><p><strong>{ingredient.name}</strong>{ingredient.interactions?.length ? ` — ${ingredient.interactions.join(' ')}` : ' — no interaction note in the catalog.'}</p>{ingredient.cautions?.length > 0 && <p><strong>Catalog cautions:</strong> {ingredient.cautions.join(' ')}</p>}</div>)}</article>)}</div></>}</div>}
+        <div className="checker-disclaimer"><ShieldCheck size={16}/><p>This tool cannot determine whether combinations are safe or suitable for you. Finished formulas, strength, frequency, health conditions, medications, allergies, and pregnancy can matter. Ask a dermatologist or pharmacist for personal advice. Try new products cautiously and stop if a significant reaction occurs.</p></div>
+        <details className="checker-sources"><summary>Dermatology references</summary><ul>{sources.map(([title, url]) => <li key={url}><a href={url} target="_blank" rel="noreferrer">{title}</a></li>)}</ul></details>
+      </section>
+      <p className="progress-footnote"><SignatureHeart/> Reports summarize saved entries only; they do not fill in missing days or predict skin changes.</p>
+    </>}
+  </main></div>;
+}
