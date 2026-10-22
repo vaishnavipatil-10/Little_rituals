@@ -2,6 +2,7 @@
   "name": "little-rituals",
   "private": true,
   "version": "0.1.0",
+  "type": "module",
   "workspaces": ["frontend", "backend"],
   "scripts": {
     "dev": "concurrently -k -n web,api -c magenta,green \"npm run dev --workspace frontend\" \"npm run dev --workspace backend\"",
