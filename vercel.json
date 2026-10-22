@@ -6,6 +6,10 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
+      "source": "/api/:resource/:path*",
+      "destination": "/api/index?__api_path=:resource/:path*"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

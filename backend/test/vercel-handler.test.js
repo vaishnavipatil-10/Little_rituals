@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import test from 'node:test';
 import handler from '../../api/[...path].js';
+import indexHandler, { restoreApiPath } from '../../api/index.js';
 
-async function startHandlerServer(t) {
-  const server = createServer(handler);
+async function startHandlerServer(t, requestHandler = handler) {
+  const server = createServer(requestHandler);
   await new Promise((resolve, reject) => {
     server.once('error', reject);
     server.listen(0, '127.0.0.1', resolve);
@@ -40,6 +41,7 @@ test('root Vercel catch-all forwards nested routine routes to Express authentica
   const stepId = '7da47ae5-2f96-4d64-a03c-82f824a51a01';
   const requests = [
     ['GET', `/api/routines?date=2026-10-22`],
+    ['PATCH', `/api/products/${stepId}`],
     ['POST', `/api/routines/${routineId}/steps`],
     ['PATCH', `/api/routines/${routineId}/steps/${stepId}`],
     ['DELETE', `/api/routines/${routineId}/steps/${stepId}`],
@@ -58,4 +60,31 @@ test('root Vercel catch-all forwards nested routine routes to Express authentica
     assert.match(response.headers.get('content-type') || '', /application\/json/);
     assert.equal((await response.json()).error.code, 'UNAUTHORIZED');
   }
+});
+
+test('Vercel index rewrite restores nested API paths and preserves query strings', async (t) => {
+  assert.equal(
+    restoreApiPath('/api/index?__api_path=products%2Fabc%2Fdetails&search=serum'),
+    '/api/products/abc/details?search=serum',
+  );
+
+  const originalUrl = process.env.SUPABASE_URL;
+  const originalKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  process.env.SUPABASE_URL = 'https://test-project.supabase.co';
+  process.env.SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
+  t.after(() => {
+    if (originalUrl === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = originalUrl;
+    if (originalKey === undefined) delete process.env.SUPABASE_PUBLISHABLE_KEY;
+    else process.env.SUPABASE_PUBLISHABLE_KEY = originalKey;
+  });
+
+  const baseUrl = await startHandlerServer(t, indexHandler);
+  const response = await fetch(`${baseUrl}/api/index?__api_path=products%2F00000000-0000-4000-8000-000000000001`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: '{}',
+  });
+  assert.equal(response.status, 401, 'rewritten product PATCH reaches Express authentication');
+  assert.equal((await response.json()).error.code, 'UNAUTHORIZED');
 });
