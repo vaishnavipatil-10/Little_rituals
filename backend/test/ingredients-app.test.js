@@ -27,3 +27,11 @@ test('private API routes are mounted and return a clear response when authentica
     assert.equal(body.error.message, 'Please sign in to continue.');
   }
 });
+
+test('unknown API paths return an API error instead of a page-not-found message', async () => {
+  const response = await fetch(`${baseUrl}/api/not-a-real-endpoint`);
+  const body = await response.json();
+  assert.equal(response.status, 404);
+  assert.equal(body.error.code, 'NOT_FOUND');
+  assert.equal(body.error.message, 'This API endpoint could not be found.');
+});

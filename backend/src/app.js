@@ -13,6 +13,10 @@ import { progressRouter } from './routes/progress.js';
 import { privacyRouter } from './routes/privacy.js';
 import { achievementsRouter } from './routes/achievements.js';
 
+export function isLocalDevelopmentOrigin(origin, nodeEnv = process.env.NODE_ENV) {
+  return nodeEnv !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || '');
+}
+
 function requireUser(req, res, next) {
   const authorization = req.get('authorization') || '';
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
@@ -33,7 +37,10 @@ export function createApp() {
   const app = express();
   app.disable('x-powered-by');
   app.use(helmet());
-  app.use(cors({ origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173' }));
+  const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+  app.use(cors({ origin(origin, callback) {
+    callback(null, !origin || origin === frontendOrigin || isLocalDevelopmentOrigin(origin));
+  } }));
   app.use(express.json({ limit: '1mb' }));
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8', legacyHeaders: false }));
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'Little Rituals API' }));
@@ -47,7 +54,13 @@ export function createApp() {
   app.use('/api/progress', requireUser, progressRouter);
   app.use('/api/privacy', requireUser, privacyRouter);
   app.use('/api/achievements', requireUser, achievementsRouter);
-  app.use((_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'This page could not be found.' } }));
+  app.use((req, res) => {
+    const isApiRequest = req.path === '/api' || req.path.startsWith('/api/');
+    return res.status(404).json({ error: {
+      code: 'NOT_FOUND',
+      message: isApiRequest ? 'This API endpoint could not be found.' : 'This page could not be found.',
+    } });
+  });
   app.use((err, _req, res, _next) => {
     console.error('Unhandled request error', err);
     res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Something went wrong. Please try again.' } });

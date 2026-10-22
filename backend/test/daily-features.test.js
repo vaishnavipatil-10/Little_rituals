@@ -131,6 +131,10 @@ test('routines are owner scoped, accept only owned products, reorder steps, and 
   assert.equal(first.status, 201); assert.equal(second.status, 201); assert.equal(firstStep.product_id, productId);
   const editStep = await fetch(`${baseUrl}/routines/${created.id}/steps/${firstStep.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stepType: 'Gentle cleanse', notes: 'Use a small amount' }) });
   assert.equal((await editStep.json()).step.step_type, 'Gentle cleanse');
+  const relinkStep = await fetch(`${baseUrl}/routines/${created.id}/steps/${firstStep.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ productId: otherProductId }) });
+  assert.equal(relinkStep.status, 404, 'steps cannot link another user\'s product');
+  const savedProductLink = await fetch(`${baseUrl}/routines/${created.id}/steps/${firstStep.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ productId: productId }) });
+  assert.equal((await savedProductLink.json()).step.product_id, productId);
 
   const reorder = await fetch(`${baseUrl}/routines/${created.id}/steps/order`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stepIds: [secondStep.id, firstStep.id] }) });
   assert.equal(reorder.status, 200);
@@ -139,9 +143,13 @@ test('routines are owner scoped, accept only owned products, reorder steps, and 
   assert.equal(progress.status, 200); assert.equal((await progress.json()).completion.total_steps, 2);
   const list = await fetch(`${baseUrl}/routines?date=2026-10-11`); const listBody = await list.json();
   assert.equal(listBody.routines.some((routine) => routine.id === otherRoutineId), false);
-  assert.equal(listBody.routines.find((routine) => routine.id === created.id).completion.completed_steps, 1);
+  const listedRoutine = listBody.routines.find((routine) => routine.id === created.id);
+  assert.equal(listedRoutine.completion.completed_steps, 1);
+  assert.equal(listedRoutine.steps.find((step) => step.id === firstStep.id).product_id, productId, 'edited product links persist in routine listing');
   const removeStep = await fetch(`${baseUrl}/routines/${created.id}/steps/${firstStep.id}`, { method: 'DELETE' });
   assert.equal(removeStep.status, 200);
+  const afterDelete = await fetch(`${baseUrl}/routines?date=2026-10-11`);
+  assert.equal((await afterDelete.json()).routines.find((routine) => routine.id === created.id).steps.some((step) => step.id === firstStep.id), false);
   const privateRoutine = await fetch(`${baseUrl}/routines/${otherRoutineId}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Changed' }) });
   assert.equal(privateRoutine.status, 404);
 });
